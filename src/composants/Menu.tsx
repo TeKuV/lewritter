@@ -29,7 +29,8 @@ export default function Menu() {
   const { user } = useAuth()
   const { config } = useConfig()
   const { isEntityVisible } = useEntityVisibility()
-  const estAdmin = (user as { role?: string } | null)?.role === 'admin'
+  const role = (user as { role?: string } | null)?.role
+  const estAdmin = role === 'admin'
   const defaut = config.localization ? config.localization.defaultLocale : null
   const ajouter = (slug: string) => `/admin/collections/${slug}/create${defaut ? `?locale=${defaut}` : ''}`
 
@@ -54,11 +55,14 @@ export default function Menu() {
     { href: '/admin', label: 'Tableau de bord', icone: 'bord' },
     ...editeurs.map((c) => fiche(c, 'articles')),
     ...(visibles.some((c) => c.slug === 'media')
-      ? [{ href: '/admin/collections/media', label: 'Médias', icone: 'media', sous: [{ href: '/admin/collections/media', label: 'Médiathèque' }, { href: '/admin/collections/media?ajouter=1', label: 'Ajouter un fichier média' }] }]
+      ? [{ href: '/admin/collections/media', label: 'Médias', icone: 'media', sous: [{ href: '/admin/collections/media', label: 'Médiathèque' }, ...(role === 'contributor' ? [] : [{ href: '/admin/collections/media?ajouter=1', label: 'Ajouter un fichier média' }])] }]
       : []),
     ...config.globals.filter((g) => isEntityVisible({ globalSlug: g.slug })).map((g, i) => ({ href: `/admin/globals/${g.slug}`, label: libelle(g.label, g.slug), icone: reglagesFiche(g as never).icone ?? 'textes', separe: i === 0 || reglagesFiche(g as never).separe })),
     ...autres.map((c) => fiche(c, 'fiche')),
-    ...(estAdmin ? [{ ...fiche(visibles.find((c) => c.slug === 'users')!, 'comptes'), label: 'Comptes', sous: [{ href: '/admin/collections/users', label: 'Tous les comptes' }, { href: '/admin/collections/users/create', label: 'Ajouter' }] }] : []),
+    // Comme dans WordPress : « Comptes » pour un administrateur, « Profil » seul pour les autres.
+    estAdmin
+      ? { href: '/admin/collections/users', label: 'Comptes', icone: 'comptes', sous: [{ href: '/admin/collections/users', label: 'Tous les comptes' }, { href: '/admin/collections/users/create', label: 'Ajouter un compte' }, { href: '/admin/account', label: 'Profil' }] }
+      : { href: '/admin/account', label: 'Profil', icone: 'comptes' },
   ]
   // Une rubrique sans « Ajouter » possible (demandes de contact) : son sous-menu ne garde que la liste.
   for (const r of rubriques) if (r.sous && autres.some((c) => r.href.endsWith(`/${c.slug}`) && c.admin?.custom?.lewritter?.lectureSeule)) r.sous = r.sous.slice(0, 1)
@@ -67,7 +71,7 @@ export default function Menu() {
     <nav className="wp-menu" aria-label="Menu principal">
       <ul>
         {rubriques.map((r) => {
-          const actif = r.href === '/admin' ? chemin === '/admin' : chemin.startsWith(r.href)
+          const actif = r.href === '/admin' ? chemin === '/admin' : chemin.startsWith(r.href) || Boolean(r.sous?.some((s) => chemin === s.href.split('?')[0]))
           return (
             <li key={r.href} className={`wp-menu__rubrique${actif ? ' wp-menu__rubrique--active' : ''}${r.separe ? ' wp-menu__rubrique--separee' : ''}`}>
               <Link href={r.href} prefetch={false} aria-current={actif ? 'page' : undefined}>

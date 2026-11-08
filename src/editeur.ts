@@ -1,8 +1,18 @@
 // Fait d'une collection une collection « éditeur de blocs » : plein écran, panneau de droite, brouillons, sauvegarde
 // automatique, corbeille, auteur, filtres de liste. Les noms de champs sont ceux de la collection du site.
-import type { CollectionBeforeOperationHook, CollectionConfig, Field, Where } from 'payload'
+import { APIError, type CollectionBeforeChangeHook, type CollectionBeforeOperationHook, type CollectionConfig, type Field, type PayloadRequest, type Where } from 'payload'
 
 import { champAuteur, depuisTitre, garderAncienSlug, noterAuteur } from './hooks.js'
+import { estRedacteur, restreindre, role } from './roles.js'
+
+// L'auteur d'une fiche, comme dans WordPress : la personne qui l'a créée ; un éditeur ou un administrateur peut le changer.
+// Un auteur ne modifie que ses fiches ; un contributeur, que ses brouillons, et il ne publie pas.
+const siennes = (req: PayloadRequest): Where => ({ and: [{ auteur: { equals: req.user!.id } }, ...(role(req) === 'contributor' ? [{ _status: { equals: 'draft' } }] : [])] })
+const fixerAuteur: CollectionBeforeChangeHook = ({ data, originalDoc, operation, req }) => {
+  if (role(req) === 'contributor' && data._status === 'published') throw new APIError('Un contributeur ne publie pas : un éditeur relira la fiche.', 403, undefined, true)
+  if (operation === 'create') return { ...data, auteur: estRedacteur(req) || !data.auteur ? req.user?.id : data.auteur }
+  return estRedacteur(req) ? { ...data, auteur: originalDoc?.auteur } : data
+}
 
 export type OptionsEditeur = {
   /** Le champ titre, écrit en grand au-dessus du texte. */
@@ -56,6 +66,7 @@ export function editeurDeBlocs(collection: CollectionConfig, options: OptionsEdi
   return {
     ...collection,
     trash: collection.trash ?? true, // une suppression se rattrape, comme la corbeille de WordPress
+    access: { ...collection.access, update: restreindre(collection.access?.update, siennes), delete: restreindre(collection.access?.delete, siennes) },
     versions: { maxPerDoc: 25, ...(typeof collection.versions === 'object' ? collection.versions : {}), drafts: { autosave: { interval: options.sauvegarde ?? 5000 } } },
     admin: {
       ...collection.admin,
@@ -67,7 +78,7 @@ export function editeurDeBlocs(collection: CollectionConfig, options: OptionsEdi
     },
     hooks: {
       ...collection.hooks,
-      beforeChange: [...(collection.hooks?.beforeChange ?? []), noterAuteur('modifie_par')],
+      beforeChange: [...(collection.hooks?.beforeChange ?? []), fixerAuteur, noterAuteur('modifie_par')],
       beforeOperation: [...(collection.hooks?.beforeOperation ?? []), nettoyerFichesVides],
     },
     fields: [
@@ -76,6 +87,7 @@ export function editeurDeBlocs(collection: CollectionConfig, options: OptionsEdi
       ...champs.slice(0, premierePosition < 0 ? champs.length : premierePosition),
       // Le panneau de droite, dans l'ordre de l'éditeur de blocs.
       { name: 'panneau', type: 'ui', admin: { position: 'sidebar', components: { Field: `${C}/EditeurPanneau` } } },
+      { name: 'auteur', label: 'Auteur', type: 'relationship', relationTo: 'users', admin: { position: 'sidebar' }, access: { update: ({ req }) => !estRedacteur(req) } },
       ...(premierePosition < 0 ? [] : champs.slice(premierePosition)),
       { name: 'supprimer', type: 'ui', admin: { position: 'sidebar', components: { Field: `${C}/EditeurSupprimer` } } },
       ...(reglages.slug ? [{ name: 'anciens_slugs', type: 'text', hasMany: true, localized: localise, admin: { hidden: true } } as Field] : []),

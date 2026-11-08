@@ -1,6 +1,6 @@
 'use client'
 // La barre supérieure de l'éditeur de blocs : retour, insertion, annuler et rétablir, titre au centre, enregistrement à droite.
-import { PublishButton, SaveDraftButton, useConfig, useDocumentInfo, useFormFields, useLocale } from '@payloadcms/ui'
+import { PublishButton, SaveDraftButton, useAuth, useConfig, useDocumentInfo, useFormFields, useLocale } from '@payloadcms/ui'
 import { $createParagraphNode, $getRoot, type LexicalEditor, REDO_COMMAND, UNDO_COMMAND } from '@payloadcms/richtext-lexical/lexical'
 import { useState } from 'react'
 
@@ -28,6 +28,7 @@ const Icone = ({ d }: { d: string }) => (
 
 export default function EditeurBarre() {
   const { hasPublishedDoc, collectionSlug } = useDocumentInfo()
+  const contributeur = (useAuth().user as { role?: string } | null)?.role === 'contributor' // il enregistre, un éditeur publie
   const { config } = useConfig()
   const { label } = useLocale()
   const collection = config.collections.find((c) => c.slug === collectionSlug)
@@ -68,7 +69,7 @@ export default function EditeurBarre() {
           <button type="button" className={panneau ? 'wpe-icone wpe-icone--actif' : 'wpe-icone'} aria-label="Réglages" aria-pressed={panneau} onClick={basculer}>
             <Icone d="M18 4H6c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zM6 5.5h7v13H6c-.3 0-.5-.2-.5-.5V6c0-.3.2-.5.5-.5zm12.5 12.5c0 .3-.2.5-.5.5h-3.5v-13H18c.3 0 .5.2.5.5v12z" />
           </button>
-          <div className="wpe-barre__publier"><PublishButton label={hasPublishedDoc ? 'Enregistrer' : 'Publier'} /></div>
+          {!contributeur && <div className="wpe-barre__publier"><PublishButton label={hasPublishedDoc ? 'Enregistrer' : 'Publier'} /></div>}
         </div>
       </div>
       <div className="wpe-pied">{nom}</div>

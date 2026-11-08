@@ -8,8 +8,10 @@ import type { CollectionConfig, Config, GlobalConfig, Plugin } from 'payload'
 import { comptes } from './collections/comptes.js'
 import { medias } from './collections/medias.js'
 import { purge, type OptionsPurge } from './hooks.js'
+import { refuserRedacteurs } from './roles.js'
 
 export { editeurDeBlocs, type OptionsEditeur } from './editeur.js'
+export { ROLES, estRedacteur, restreindre, type Role } from './roles.js'
 export { slugify, depuisTitre } from './hooks.js'
 export { creerCompte } from './comptes.js'
 
@@ -39,8 +41,11 @@ export const lewritter = (options: OptionsLewritter): Plugin => (config: Config)
     ...fournies,
     ...(fournies.some((c) => c.slug === medias(options.tailles).slug) ? [] : [medias(options.tailles)]),
     ...(fournies.some((c) => c.slug === auth) ? [] : [comptes]),
-  ].map((c): CollectionConfig => (c.slug === auth || c.admin?.custom?.lewritter?.sansPurge ? c : { ...c, hooks: { ...c.hooks, ...ajouter(c.hooks, purge(options.purge)) } }))
-  const globals = (config.globals ?? []).map((g): GlobalConfig => ({ ...g, hooks: { ...g.hooks, afterChange: [...(g.hooks?.afterChange ?? []), ...purge(options.purge).globale] } }))
+  ]
+    .map((c): CollectionConfig => (c.slug === auth || c.admin?.custom?.lewritter?.sansPurge ? c : { ...c, hooks: { ...c.hooks, ...ajouter(c.hooks, purge(options.purge)) } }))
+    // Un auteur ou un contributeur n'écrit que dans l'éditeur de blocs et la médiathèque, qui ont leurs propres règles.
+    .map((c): CollectionConfig => (c.slug === auth || c.slug === 'media' || c.admin?.custom?.lewritter?.editeur ? c : { ...c, access: { ...c.access, create: refuserRedacteurs(c.access?.create), update: refuserRedacteurs(c.access?.update), delete: refuserRedacteurs(c.access?.delete) } }))
+  const globals = (config.globals ?? []).map((g): GlobalConfig => ({ ...g, access: { ...g.access, update: refuserRedacteurs(g.access?.update) }, hooks: { ...g.hooks, afterChange: [...(g.hooks?.afterChange ?? []), ...purge(options.purge).globale] } }))
   const reglages: ReglagesClient = { nom: options.nom, logo: options.logo, monogramme: options.monogramme, siteUrl: options.siteUrl }
   const serveur = config.serverURL ?? process.env.SERVER_URL
 

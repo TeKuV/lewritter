@@ -1,8 +1,11 @@
 import type { CollectionConfig } from 'payload'
 
 import { champAuteur, noterAuteur } from '../hooks.js'
+import { restreindre, role } from '../roles.js'
 
 const connecte = ({ req }: { req: { user?: unknown } }) => Boolean(req.user)
+// Comme dans WordPress : un contributeur n'envoie pas de fichiers ; un auteur ne modifie ou ne supprime que les siens.
+const siens = restreindre(connecte, (req) => (role(req) === 'author' ? { televerse_par: { equals: (req.user as { email?: string }).email } } : false))
 const webp = { format: 'webp' as const, options: { quality: 80 } }
 
 /**
@@ -13,7 +16,7 @@ export const medias = (tailles = [320, 480, 640, 720, 1200]): CollectionConfig =
   slug: 'media',
   labels: { singular: 'Image', plural: 'Médiathèque' },
   admin: { components: { views: { list: { Component: 'lewritter/composants/Mediatheque' } } } },
-  access: { read: () => true, create: connecte, update: connecte, delete: connecte },
+  access: { read: () => true, create: ({ req }) => Boolean(req.user) && role(req) !== 'contributor', update: siens, delete: siens },
   hooks: { beforeChange: [noterAuteur('televerse_par')] },
   upload: {
     staticDir: process.env.MEDIA_DIR || 'media',

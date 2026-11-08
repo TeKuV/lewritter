@@ -4,7 +4,7 @@ import type { Payload } from 'payload'
 import type { ReglagesClient } from '../index.js'
 import { collectionsEditeur, libelle } from './outils.js'
 
-type Props = { payload?: Payload; locale?: { code?: string }; user?: { email?: string } }
+type Props = { payload?: Payload; locale?: { code?: string }; user?: { email?: string; prenom?: string | null; nom?: string | null } }
 
 export default function BarreAdmin({ payload, locale, user }: Props) {
   const r = payload?.config.admin.custom?.lewritter as ReglagesClient | undefined
@@ -36,7 +36,7 @@ export default function BarreAdmin({ payload, locale, user }: Props) {
             )}
           </span>
         )}
-        <a className="wp-bar__compte" href="/admin/account">Bonjour, {user?.email}</a>
+        <a className="wp-bar__compte" href="/admin/account">Bonjour, {[user?.prenom, user?.nom].filter(Boolean).join(' ') || user?.email}</a>
         <a href="/admin/logout">Se déconnecter</a>
       </div>
     </header>

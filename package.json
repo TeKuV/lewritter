@@ -1,6 +1,6 @@
 {
   "name": "lewritter",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Back-office Payload à la manière de WordPress : éditeur de blocs, médiathèque, connexion par une console OIDC.",
   "license": "MIT",
   "type": "module",
