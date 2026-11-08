@@ -43,7 +43,7 @@ export function editeurDeBlocs(collection: CollectionConfig, options: OptionsEdi
 
   const champs = collection.fields.map((f): Field => {
     if (!('name' in f)) return f
-    if (f.name === reglages.titre && f.type === 'text') return { ...f, admin: { placeholder: 'Saisissez le titre', ...f.admin, components: { Cell: `${C}/CelluleTitre`, ...f.admin?.components } } }
+    if (f.name === reglages.titre && f.type === 'text') return { ...f, admin: { placeholder: 'Saisissez le titre', ...f.admin, components: { Cell: `${C}/CelluleTitre`, Field: `${C}/ChampTitre`, ...f.admin?.components } } }
     if (f.name === reglages.slug && f.type === 'text') return { ...f, hooks: { ...f.hooks, beforeValidate: [depuisTitre(reglages.titre), ...(f.hooks?.beforeValidate ?? [])], beforeChange: [...(f.hooks?.beforeChange ?? []), garderAncienSlug] }, admin: { position: 'sidebar', placeholder: 'Depuis le titre', ...f.admin } }
     if (f.name === reglages.cle && f.type === 'text') return { ...f, hooks: { ...f.hooks, beforeValidate: [depuisTitre(reglages.titre), ...(f.hooks?.beforeValidate ?? [])] }, admin: { ...f.admin, hidden: true } }
     // Modifiés depuis le panneau de droite, avec leurs propres contrôles.
