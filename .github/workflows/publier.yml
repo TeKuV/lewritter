@@ -1,0 +1,28 @@
+# Publie LeWritter sur npm quand une étiquette de version est poussée (npm version x.y.z && git push --follow-tags).
+name: Publier sur npm
+
+on:
+  push:
+    tags: ['v*']
+
+permissions:
+  contents: read
+
+jobs:
+  publier:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          registry-url: https://registry.npmjs.org
+      - name: L'étiquette correspond à la version de package.json
+        run: |
+          attendue="v$(node -p "require('./package.json').version")"
+          if [ "$GITHUB_REF_NAME" != "$attendue" ]; then echo "Étiquette $GITHUB_REF_NAME, mais package.json annonce $attendue" >&2; exit 1; fi
+      - run: npm ci --no-audit --no-fund
+      # prepack construit dist/ avec tsc : une erreur de type empêche la publication.
+      - run: npm publish
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

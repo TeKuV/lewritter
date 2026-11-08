@@ -3,6 +3,12 @@
   "version": "0.2.0",
   "description": "Back-office Payload à la manière de WordPress : éditeur de blocs, médiathèque, connexion par une console OIDC.",
   "license": "MIT",
+  "author": "TeKuV",
+  "keywords": ["payload", "payload-plugin", "payloadcms", "cms", "wordpress", "wp-admin", "oidc", "back-office"],
+  "repository": { "type": "git", "url": "git+https://github.com/TeKuV/lewritter.git" },
+  "homepage": "https://github.com/TeKuV/lewritter#readme",
+  "bugs": { "url": "https://github.com/TeKuV/lewritter/issues" },
+  "publishConfig": { "access": "public" },
   "type": "module",
   "files": ["dist", "README.md", "LICENSE"],
   "exports": {
@@ -12,7 +18,7 @@
     "./style.scss": "./dist/style.scss"
   },
   "scripts": {
-    "build": "tsc -p tsconfig.json && node -e \"require('node:fs').copyFileSync('src/style.scss','dist/style.scss')\"",
+    "build": "node -e \"require('node:fs').rmSync('dist',{recursive:true,force:true})\" && tsc -p tsconfig.json && node -e \"require('node:fs').copyFileSync('src/style.scss','dist/style.scss')\"",
     "prepack": "npm run build"
   },
   "dependencies": {
