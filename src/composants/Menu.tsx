@@ -29,7 +29,8 @@ export default function Menu() {
   const { user } = useAuth()
   const { config } = useConfig()
   const { isEntityVisible } = useEntityVisibility()
-  const estAdmin = (user as { role?: string } | null)?.role === 'admin'
+  const role = (user as { role?: string } | null)?.role
+  const estAdmin = role === 'admin'
   const defaut = config.localization ? config.localization.defaultLocale : null
   const ajouter = (slug: string) => `/admin/collections/${slug}/create${defaut ? `?locale=${defaut}` : ''}`
 
@@ -54,7 +55,7 @@ export default function Menu() {
     { href: '/admin', label: 'Tableau de bord', icone: 'bord' },
     ...editeurs.map((c) => fiche(c, 'articles')),
     ...(visibles.some((c) => c.slug === 'media')
-      ? [{ href: '/admin/collections/media', label: 'Médias', icone: 'media', sous: [{ href: '/admin/collections/media', label: 'Médiathèque' }, { href: '/admin/collections/media?ajouter=1', label: 'Ajouter un fichier média' }] }]
+      ? [{ href: '/admin/collections/media', label: 'Médias', icone: 'media', sous: [{ href: '/admin/collections/media', label: 'Médiathèque' }, ...(role === 'contributor' ? [] : [{ href: '/admin/collections/media?ajouter=1', label: 'Ajouter un fichier média' }])] }]
       : []),
     ...config.globals.filter((g) => isEntityVisible({ globalSlug: g.slug })).map((g, i) => ({ href: `/admin/globals/${g.slug}`, label: libelle(g.label, g.slug), icone: reglagesFiche(g as never).icone ?? 'textes', separe: i === 0 || reglagesFiche(g as never).separe })),
     ...autres.map((c) => fiche(c, 'fiche')),

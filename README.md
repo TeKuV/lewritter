@@ -107,7 +107,18 @@ Comme dans wp-admin :
 - la barre du haut dit « Bonjour » avec le prénom et le nom, ou l'e-mail s'ils sont vides ;
 - personne ne change son propre rôle ni ne supprime son propre compte, et le dernier administrateur ne peut être ni rétrogradé ni supprimé.
 
-Les champs `prenom` et `nom` sont nouveaux dans la 0.2 : un site qui a des migrations en crée une (`npx payload migrate:create`).
+Les rôles reprennent ceux de WordPress :
+
+| Rôle | Éditeur de blocs | Médiathèque | Autres collections, fiches uniques | Comptes |
+| --- | --- | --- | --- | --- |
+| Administrateur | tout | tout | selon le site | tout |
+| Éditeur | tout, choisit l'auteur d'une fiche | tout | selon le site | lit la liste, modifie son profil |
+| Auteur | crée, publie, modifie et supprime ses fiches | envoie, modifie et supprime ses fichiers | lecture | son profil |
+| Contributeur | écrit ses brouillons, sans les publier ; plus rien une fois publiés | lecture | lecture | son profil |
+
+Chaque fiche de l'éditeur de blocs a un champ `auteur` (relation vers `users`), rempli à la création. Une fiche créée avant la 0.2 n'en a pas : seul un éditeur ou un administrateur peut la modifier tant qu'on ne lui en a pas donné un. Un fichier de la médiathèque appartient à la dernière personne qui l'a modifié (`televerse_par`).
+
+La 0.2 ajoute les champs `prenom` et `nom` aux comptes, deux rôles, et le champ `auteur` à chaque collection de l'éditeur de blocs : un site qui a des migrations en crée une (`npx payload migrate:create`).
 
 `editeurDeBlocs(collection, options)` :
 

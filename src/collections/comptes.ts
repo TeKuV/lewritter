@@ -1,6 +1,7 @@
 import { APIError, type Access, type CollectionBeforeChangeHook, type CollectionBeforeDeleteHook, type CollectionConfig, type FieldAccess } from 'payload'
 
 import { strategieConsole } from '../auth/strategie.js'
+import { ROLES } from '../roles.js'
 
 const isAdmin: Access = ({ req }) => req.user?.role === 'admin'
 const champAdmin: FieldAccess = ({ req }) => req.user?.role === 'admin'
@@ -42,7 +43,8 @@ export const comptes: CollectionConfig = {
   access: {
     read: ({ req }) => {
       if (!req.user) return false // sans ce test, { equals: undefined } ne filtre rien : tout le monde verrait les comptes
-      return req.user.role === 'admin' ? true : { id: { equals: req.user.id } }
+      // Un éditeur voit les comptes pour choisir l'auteur d'une fiche ; les autres ne voient que le leur.
+      return req.user.role === 'admin' || req.user.role === 'editor' ? true : { id: { equals: req.user.id } }
     },
     create: isAdmin,
     update: ({ req }) => {
@@ -87,10 +89,7 @@ export const comptes: CollectionConfig = {
       required: true,
       defaultValue: 'editor',
       access: { update: champAdmin },
-      options: [
-        { label: 'Administrateur', value: 'admin' },
-        { label: 'Éditeur', value: 'editor' },
-      ],
+      options: ROLES,
     },
     // Glissé dans le jeton de session : un jeton d'une époque passée n'ouvre plus rien.
     { name: 'epoque', type: 'number', defaultValue: 0, hidden: true, saveToJWT: 'ep', access: { update: () => false } },
