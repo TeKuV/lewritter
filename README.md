@@ -117,8 +117,31 @@ Une collection règle sa place dans le menu avec `admin.custom.lewritter` : `ico
 ```bash
 npm install
 npm run build   # dist/
-npm pack        # lewritter-x.y.z.tgz, à installer dans un site avec npm install ./lewritter-x.y.z.tgz
+npm pack        # lewritter-x.y.z.tgz, pour essayer une version dans un site avant de la publier
 ```
+
+## Publier une version
+
+Sur `main` à jour, avec un numéro qui suit [semver](https://semver.org/lang/fr/) (correctif : 0.2.1 ; nouveauté : 0.3.0) :
+
+```bash
+npm version 0.2.1        # change package.json et crée l'étiquette v0.2.1
+git push --follow-tags   # l'action « Publier sur npm » publie la version
+```
+
+L'action vérifie que l'étiquette correspond à `package.json`, construit `dist/` et publie avec le secret `NPM_TOKEN` du dépôt (jeton npm « Granular », droit de publication sur `lewritter`).
+
+## Mettre à jour un site
+
+Dans le dossier du back-office du site :
+
+```bash
+npm install lewritter@latest
+npx payload migrate:create   # seulement si la version change la base (voir ses notes)
+npx payload generate:importmap
+```
+
+Puis committer, reconstruire l'image et la déployer : les migrations s'appliquent au démarrage si le site passe `prodMigrations` à son adaptateur de base.
 
 Premier utilisateur : le back-office de [lekwatt.com](https://lekwatt.com) (dépôt TeKuV/ndop, dossier `cms/`).
 
