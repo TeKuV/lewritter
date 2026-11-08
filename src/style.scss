@@ -268,7 +268,7 @@ html:has(.wpe-barre) body { background: var(--wp-blanc); }
   .document-fields__main { width: auto !important; max-width: none; margin-right: 280px; border: 0; background: var(--wp-blanc); }
   .document-fields__edit { flex: 1; width: 100%; min-height: 0 !important; border: 0 !important; padding: 56px 20px 80px !important; }
   .document-fields__fields { max-width: 645px; margin-inline: auto; gap: 8px; }
-  #field-title { height: auto; padding: 0; background: transparent; border: 0; box-shadow: none; color: #111; font: 400 43px/1.2 var(--wp-police); }
+  #field-title { display: block; width: 100%; height: auto; padding: 0; overflow: hidden; resize: none; background: transparent; border: 0; box-shadow: none; color: #111; font: 400 43px/1.2 var(--wp-police); overflow-wrap: anywhere; }
   #field-title::placeholder { color: #757575; opacity: 1; font: inherit; }
   #field-title:focus { outline: 0; }
   .field-type:has(#field-title) > .field-label,
