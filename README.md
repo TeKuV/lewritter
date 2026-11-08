@@ -98,6 +98,17 @@ Environnement du back-office :
 
 La console doit fournir `openid email profile` et un `email_verified` à `true`. Un compte local doit exister avec le même e-mail : LeWritter n'en crée jamais à la connexion. Le premier compte se crée avec `creerCompte(payload, email, 'admin')`, par exemple dans un script lancé par `npx payload run`.
 
+## Comptes
+
+Comme dans wp-admin :
+
+- un administrateur voit « Comptes » dans le menu : « Tous les comptes » (filtres par rôle au-dessus de la liste), « Ajouter un compte » et « Profil » ;
+- un éditeur ne voit que « Profil », où il change son prénom et son nom ; l'e-mail et le rôle ne changent que par un administrateur ;
+- la barre du haut dit « Bonjour » avec le prénom et le nom, ou l'e-mail s'ils sont vides ;
+- personne ne change son propre rôle ni ne supprime son propre compte, et le dernier administrateur ne peut être ni rétrogradé ni supprimé.
+
+Les champs `prenom` et `nom` sont nouveaux dans la 0.2 : un site qui a des migrations en crée une (`npx payload migrate:create`).
+
 `editeurDeBlocs(collection, options)` :
 
 | Option | Rôle |

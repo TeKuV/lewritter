@@ -58,7 +58,10 @@ export default function Menu() {
       : []),
     ...config.globals.filter((g) => isEntityVisible({ globalSlug: g.slug })).map((g, i) => ({ href: `/admin/globals/${g.slug}`, label: libelle(g.label, g.slug), icone: reglagesFiche(g as never).icone ?? 'textes', separe: i === 0 || reglagesFiche(g as never).separe })),
     ...autres.map((c) => fiche(c, 'fiche')),
-    ...(estAdmin ? [{ ...fiche(visibles.find((c) => c.slug === 'users')!, 'comptes'), label: 'Comptes', sous: [{ href: '/admin/collections/users', label: 'Tous les comptes' }, { href: '/admin/collections/users/create', label: 'Ajouter' }] }] : []),
+    // Comme dans WordPress : « Comptes » pour un administrateur, « Profil » seul pour les autres.
+    estAdmin
+      ? { href: '/admin/collections/users', label: 'Comptes', icone: 'comptes', sous: [{ href: '/admin/collections/users', label: 'Tous les comptes' }, { href: '/admin/collections/users/create', label: 'Ajouter un compte' }, { href: '/admin/account', label: 'Profil' }] }
+      : { href: '/admin/account', label: 'Profil', icone: 'comptes' },
   ]
   // Une rubrique sans « Ajouter » possible (demandes de contact) : son sous-menu ne garde que la liste.
   for (const r of rubriques) if (r.sous && autres.some((c) => r.href.endsWith(`/${c.slug}`) && c.admin?.custom?.lewritter?.lectureSeule)) r.sous = r.sous.slice(0, 1)
@@ -67,7 +70,7 @@ export default function Menu() {
     <nav className="wp-menu" aria-label="Menu principal">
       <ul>
         {rubriques.map((r) => {
-          const actif = r.href === '/admin' ? chemin === '/admin' : chemin.startsWith(r.href)
+          const actif = r.href === '/admin' ? chemin === '/admin' : chemin.startsWith(r.href) || Boolean(r.sous?.some((s) => chemin === s.href.split('?')[0]))
           return (
             <li key={r.href} className={`wp-menu__rubrique${actif ? ' wp-menu__rubrique--active' : ''}${r.separe ? ' wp-menu__rubrique--separee' : ''}`}>
               <Link href={r.href} prefetch={false} aria-current={actif ? 'page' : undefined}>
